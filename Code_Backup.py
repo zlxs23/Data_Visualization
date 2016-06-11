@@ -280,6 +280,83 @@ xscale('log')
 xlim(1e-6, 1e6)
 
 show()
+'''
+2.12.2
+Lena 图 数字信号处理
+'''
+import scipy.misc
+import matplotlib.plot as plt
+
+# load already prepared ndarray from scipy
+'''
+lena = scipy.misc.lean()
+'''
+# lena 被 face OR ascent 替代
+# load already prepared ndarray from scipy
+subplot(211)
+ascent = scipy.misc.ascent()
+plt.gray()
+plt.imshow(ascent)
+plt.colorbar()
+plt.show()
+subplot(212)
+face = scipy.misc.face()
+# set the default colormap to gray
+plt.gray()
+plt.imshow(face)
+plt.colorbar()
+plt.show()
+
+# 更一步进行检查这个对象
+print(face.shape, '\n', face.max(), '\n', face.dtype)
+print(ascent.shape, '\n', ascent.max(), '\n', ascent.dtype)
+# 利用 Python Image Library Read Image
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+
+bug = Image.open('head_image_zhihu.jpg')
+arr = np.array(bug.getdata(), numpy.uint8).reshape(bug.size[1], bug.size[0], 3)
+plt.gray()
+plt.imshow(arr)
+plt.colorbar()
+plt.show()
+
+'''
+2.12.3
+利用 Python 操作并处理图像
+加载一幅 RGB 通道的真实图像 将之转换成单通道的 ndarray 然后利用数组切片的方法来放大大部分图像
+'''
+
+import matplotlib.pyplot as plt
+import scipy
+import numpy
+
+bug = scipy.misc.imread('head_image_zhihu.jpg')
+
+# if want to inspect the shape of the loaded image
+# uncomment following line
+# print bug.shape
+
+# the original image is RGB having values for all three
+# channels separately need to convert that to freyscale image
+# by picking up just one channel
+
+# covert to gray
+bug = bug[:, :, 0]
+# show original image
+plt.figure()
+plt.gray()
+
+plt.subplot(211)
+plt.imshow(bug)
+
+# show 'zoomed' region
+zbug = bug[250:750, 250:750]
+plt.subplot(212)
+plt.imshow(zbug)
+
+plt.show()
 
 '''
 2.13.2
@@ -335,3 +412,249 @@ pylab.plot(x, y)
 pylab.xlabel('Time')
 pylab.ylabel('Value')
 pylab.show()
+
+'''
+为了更多控制 添加各种不同的分布
+'''
+
+import random
+import matplotlib
+import matplotlib.pyplot as plt
+
+SAMPLE_SIZE = 1000
+#  histogram buckets
+buckets = 100
+
+plt.figure()
+
+# need to update font size just for this example
+# matplotlib.rcParams.update({'font.size':7})
+
+# Figure 1 在 [0,1] 之间分布的随机变量
+plt.subplot(521)
+plt.xlabel('random.random')
+# Return the next random floating point number in the range [0.0,1.0]
+res = [random.random() for _ in range(1, SAMPLE_SIZE)]
+plt.hist(res, buckets)
+
+# Figure 2 均匀分布的随机变量
+plt.subplot(522)
+plt.xlabel('random.uniform')
+# Return a random floating point number N such that a <= N <= b for a <=b and b <= N for b < a
+# The end_point value b may or may not included in the range depending on
+# floating_point rounding in the equation a + (b - a) * random()
+a = 1
+b = SAMPLE_SIZE
+res = [random.uniform(a, b) for _ in range(1, SAMPLE_SIZE)]
+plt.hist(res, buckets)
+
+# Figure 3 三角形分布
+plt.subplot(523)
+plt.xlabel('random.triangular')
+# Return a random floating point number N such that low <= N <= high and with the specified
+# mode between those bounds The los and high bounds default to zero and one The mode
+# argument defaults to the midpoint between the bounds giving a symmentric
+# distribution
+low = 1
+high = SAMPLE_SIZE
+res = [random.triangular(low, high) for _ in range(1, SAMPLE_SIZE)]
+plt.hist(res, buckets)
+
+# Figure 4 beta 分布
+plt.subplot(524)
+plt.xlabel('random.betavariate')
+alpha = 1
+beta = 10
+res = [random.betavariate(alpha, beta) for _ in range(1, SAMPLE_SIZE)]
+plt.hist(res, buckets)
+
+# Figure 5 指数分布
+plt.subplot(525)
+plt.xlabel('random.expovariate')
+lambd = 1.0 / ((SAMPLE_SIZE + 1) / 2.)
+res = [random.expovariate(lambd) for _ in range(1, SAMPLE_SIZE)]
+plt.hist(res, buckets)
+
+# Figure 6 gamma 分布
+plt.subplot(526)
+plt.xlabel('random.gammavariate')
+alpha = 1
+beta = 10
+res = [random.gammavariate(alpha, beta) for _ in range(1, SAMPLE_SIZE)]
+plt.hist(res, buckets)
+
+# Figure 7 对数正态分布
+plt.subplot(527)
+plt.xlabel('random.lognormvariate')
+mu = 1
+sigma = 0.5
+res = [random.lognormvariate(mu, sigma) for _ in range(1, SAMPLE_SIZE)]
+plt.hist(res, buckets)
+
+# Figure 8 正态分布
+plt.subplot(528)
+plt.xlabel('random.normalvariate')
+mu = 1
+sigma = 0.5
+res = [random.normalvariate(mu, sigma) for _ in range(1, SAMPLE_SIZE)]
+plt.hist(res, buckets)
+
+# Figure 9 帕累托分布
+plt.subplot(529)
+plt.xlabel('random.paretovariate')
+alpha = 1
+res = [random.paretovariate(alpha) for _ in range(1, SAMPLE_SIZE)]
+plt.hist(res, buckets)
+
+plt.tight_layout()
+plt.show()
+
+'''
+2.14.2
+真实数据的噪声平滑处理
+'''
+
+from pylab import *
+from numpy import *
+
+
+def moving_average(interval, window_size):
+    '''
+    Compute convoluted window for given size
+    '''
+    window = ones(int(window_size)) / float(window_size)
+    return convolve(interval, window, 'same')
+
+t = linspace(-4, 4, 100)
+y = sin(t) + randn(len(t)) * 0.1
+
+plot(t, y, 'k.')
+
+# compute moving average
+y_av = moving_average(y, 10)
+plot(t, y_av, 'r')
+# xlim(0,100)
+xlabel('Time')
+ylabel('Value')
+grid(True)
+show()
+
+'''
+基于信号(数据点)窗口的卷积(函数的总和)
+让窗口平滑处理达到更好的效果
+'''
+
+import numpy
+from numpy import *
+from pylab import *
+
+# possiable window type
+
+WINDOWS = ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']
+# want to see just two window type comment previoys line
+# and uncomment the following one
+# WINDOWS = ['flat','hanning']
+
+
+def smooth(x, window_len=11, window='hanning'):
+    '''
+    Smooth the data using a window with requested size
+    Return smothed signal
+
+    x -- input signal
+    window_len -- length of smoothing window
+    window -- type of window: 'flat','hanning','hamming','bartlett','blackman'
+    flat window will produce a moving average smoothing
+    '''
+    if x.ndim != 1:
+        raise ValueError('Smooth only accepts 1 dimension arrays')
+    if x.size < window_len:
+        raise ValueError('Input vector needs to be bigger than window size')
+    if window_len < 3:
+        return x
+    if not window in WINDOWS:
+        raise ValueError(
+            'Window is one of [flat][hanning][hamming][bartlett][blackman]')
+    # adding reflected window in front and at the end
+    s = numpy.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
+    # pick windows type and da averaging
+    if window == 'flat':    # moving average
+        w = numpy.ones(window_len, 'd')
+    else:
+        # call appropriate func in numpy
+        w = eval('numpy.' + window + '(window_len)')
+        # NOTE: length(output) != length(input), to correct this:
+        # return y[(window_len/2-1):-(window_len/2)] instead of just y.
+        y = numpy.convolve(w/w.sum(), s, mode='vaild')
+        return y
+
+# Get some evently spaced numbers over a specified interval
+t = linspace(-4, 4, 100)
+# Make some noisy sinusoidal
+x = sin(t)
+xn = x + randn(len(t))*0.1
+
+# Smooth it
+y = smooth(x)
+
+# windows
+ws = 31
+
+subplot(211)
+plot(ones(ws))
+
+# draws on the same axes
+hold(True)
+
+# plot for every windows
+for w in WINDOWS[1:]:
+    eval('plot('+w+'(ws))')
+# configure axis properties
+axis([0, 30, 0, 1.1])
+
+# add legend for every window
+legend(WINDOWS)
+
+title('Smoothing window')
+
+# add second plot
+subplot(212)
+
+# draw original signal
+plot(x)
+
+# and signal with added noise
+plot(xn)
+
+# smooth signal with noise for every possiable windowing algorithm
+for w in WINDOWS:
+    plot(smooth(xn, 10, w))
+# add legend for every graph
+l = ['original signal', 'signal with noise']
+l.extend(WINDOWS)
+legend(l)
+
+title('Smoothed signal')
+
+show()
+
+'''
+利用 中值滤波 算法 进行信号滤波
+'''
+
+import numpy as np
+import pylab as p
+import scipy.signal as signal
+
+# get some linear data
+x = np.linspace(0,1,101)
+
+# add some noisy signal
+x[3::10] = 1.5
+
+p.plot(x)
+p.plot(signal.medfilt(x,3))
+p.plot(signal.medfilt(x,5))
+
+p.legend(['original signal','length 3','length 5'])
+p.show()
