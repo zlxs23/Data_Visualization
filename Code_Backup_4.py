@@ -226,3 +226,175 @@ if __name__ == '__main__':
 
 	plt.draw()
 	plt.show()
+
+'''
+创建等高线 contour plot
+	显示的是矩阵的等值线 (用数值相等的各点连成的曲线)
+	数值由一个 有 2 个 args 的 func GET
+'''
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+def process_signals(x, y):
+	return (1 - (x ** 2 + y **2)) * np.exp(-y ** 3 / 3)
+
+x = np.arange(-1.5, 1.5, 0.1)
+y = np.arange(-1.5, 1.5, 0.1)
+
+# Make grids of points
+
+X, Y = np.meshgrid(x, y)
+
+Z = process_signals(X, Y)
+
+# Number of isolines
+
+N = np.arange(-1, 1.5, 0.3)
+
+# adding the Contour lines with labels
+CS = plt.contour(Z, N, linewidth=2, cmap=mpl.cm.jet)
+plt.clabel(CS, inline=True, fmt='%1.1f', fontsize=10)
+plt.colorbar(CS)
+
+plt.title('My function: $z=(1-x^2+y^2) e^{-(y^3)/3}$')
+plt.show()
+
+'''
+填充图标底层区域
+	matplotlib.pyplot.fill
+为特定的图形交集区域填充阴影
+'''
+import numpy as np
+import matplotlib.pyplot as plt
+from math import sqrt
+
+t = range(10000)
+y = [sqrt(i) for i in t]
+plt.plot(t, y, color='red', lw=2)
+plt.fill_between(t, y, color='silver')
+plt.show()
+
+x = np.arange(0.0, 2, 0.01)
+y1 = np.sin(np.pi * x)
+y2 = 1.7 * np.sin(4 * np.pi * x)
+
+fig = plt.figure()
+axes1 = fig.add_subplot(211)
+axes1.plot(x, y1, x, y2, color='grey')
+axes1.fill_between(x, y1, y2, where=y2 <= y1, facecolor='blue', interpolate=True)
+axes1.fill_between(x, y1, y2, where=y2 >=y1, facecolor='gold', interpolate=True)
+axes1.set_title('Blue where y2 <= y1. Gold where y2 >= y1.')
+axes1.set_ylim('-2, 2')
+
+# Mask values in y2 with value greater than 1.0
+y2 = np.ma.masked_greater(y2, 1.0)
+axes2 = fig.add_subplot(212, sharex=axes1)
+axes2.plot(x, y1, x, y2, color='black')
+axes2.fill_between(x, y1, y2, where=y2 <= y1, facecolor='blue', interpolate=True)
+axes2.fill_between(x, y1, y2, where=y2 >= y1, facecolor='gold', interpolate=True)
+axes2.set_title('Same as above, but mask')
+axes2.set_ylim(-2, 2)
+axes2.grid('on')
+
+plt.show()
+
+'''
+绘制极线图
+'''
+import matplotlib.cm as cm
+
+figsize = 7
+colormap = lambda r: cm.Set2(r/20.)
+N = 18
+
+fig = plt.figure(figsize=(figsize, figsize))
+ax = fig.add_axes([0.2, 0.2, 0.7, 0.7], polar=True)
+
+theta = np.arange(0.0, 2 * np.pi, 2 * np.pi / N)
+radii = 20 * np.random.rand(N)
+width = np.pi / 4 * np.random.rand(N)
+bars = ax.bar(theta, radii, width=width, bottom=0.0)
+for r, bar in zip(radii, bars):
+	bar.set_facecolor(colormap(r))
+	bar.set_alpha(0.6)
+
+plt.show()
+
+'''
+使用极线条实现可视化文件系统树
+可视化具有比例大小的文件系统树
+'''
+import os
+import sys
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import numpy as np
+
+def build_folders(start_path):
+	folders = []
+
+	for each in get_directories(start_path):
+		size = get_size(each)
+		if size >= 25 * 1024 * 1024:
+			folders.append({'size': size, 'path': each})
+
+	for each in folders:
+		print('Path: ' + os.path.basename(each['path']))
+		print('Size: ' + str(each['size'] / 1024 / 1024) + ' MB')
+
+	return folders
+
+def get_size(path):
+	assert path is not None
+
+	total_size = 0
+	# 应该使用 os.path.walk [not os.walk]
+	for dirpath, dirnames, filenames in os.walk(path):
+		for f in filenames:
+			fp = os.path.join(dirpath, f)
+			try:
+				size = os.path.getsize(fp)
+				total_size += size
+				# print('Size of \'{0}\' is {1}'.format(fp, size))
+			except OSError as err:
+				print(str(err))
+				pass
+
+	return total_size
+
+def get_directories(path):
+	dirs = set()
+	for dirpath, dirnames, filenames in os.walk(path):
+		dirs = set([os.path.join(dirpath, x) for x in dirnames])
+		break  # just want the first one
+	return dirs
+
+def draw(folders):
+	"""Draw folder size for given folder"""
+	figsize = (8, 8)  # keep the figsize square
+	ldo, rup = 0.1, 0.8  # leftwon and rightup normalized
+	fig = plt.figure(figsize=figsize)
+	ax = fig.add_axes([ldo, ldo, rup, rup], polar=True)
+
+	# transfrom data
+	x = [os.path.basename(x['path']) for x in folders]
+	y = [y['size'] / 1024 / 1024 for y in folders]
+	theta = np.arange(0.0, 2 * np.pi, 2 * np.pi / len(x))
+	radii = y
+
+	bars = ax.bar(theta, radii)
+	middle = 90 / len(x)
+	theta_ticks = [t * (180 / np.pi) + middle for t in theta]
+	lines, labels = plt.thetagrids(theta, labels=x, frac=0.5)
+	for step, each in enumerate(labels):
+		each.set_rotation(theta[step] * (180 / np.pi) + middle)
+		each.set_fontsize(8)
+
+	# configure bars
+	colormap = lambda r: cm.Set2(r / len(x))
+	for r, each in zip(radii, bars):
+		each.set_facecolor(colormap(r))
+		each.set_alpha(0.5)
+
+	plt.show()
